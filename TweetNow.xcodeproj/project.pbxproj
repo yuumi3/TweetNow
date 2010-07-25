@@ -225,10 +225,6 @@
 		1BF4B89B10E268470032842A /* Place.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Place.m; sourceTree = "<group>"; };
 		1BF4B90A10E26FF30032842A /* PlaceList.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PlaceList.h; sourceTree = "<group>"; };
 		1BF4B90B10E26FF30032842A /* PlaceList.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PlaceList.m; sourceTree = "<group>"; };
-		1BF76A9B114C6640002D7887 /* tori.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = tori.jpg; sourceTree = "<group>"; };
-		1BF76A9D114C6640002D7887 /* TweetNow.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = TweetNow.jpg; sourceTree = "<group>"; };
-		1BF76A9E114C6640002D7887 /* TweetNow.s.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = TweetNow.s.jpg; sourceTree = "<group>"; };
-		1BF76A9F114C6640002D7887 /* TweetNowSC.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = TweetNowSC.png; sourceTree = "<group>"; };
 		1BFFEC5110E10EBB0031B388 /* StationSearch.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = StationSearch.m; sourceTree = "<group>"; };
 		1BFFEC5210E10EBB0031B388 /* StationSearch.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StationSearch.h; sourceTree = "<group>"; };
 		1BFFEC5310E10EBB0031B388 /* StationLocation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = StationLocation.m; sourceTree = "<group>"; };
@@ -523,17 +519,6 @@
 			path = UnitTests;
 			sourceTree = "<group>";
 		};
-		1BF76A9A114C6640002D7887 /* Graphics */ = {
-			isa = PBXGroup;
-			children = (
-				1BF76A9B114C6640002D7887 /* tori.jpg */,
-				1BF76A9D114C6640002D7887 /* TweetNow.jpg */,
-				1BF76A9E114C6640002D7887 /* TweetNow.s.jpg */,
-				1BF76A9F114C6640002D7887 /* TweetNowSC.png */,
-			);
-			path = Graphics;
-			sourceTree = "<group>";
-		};
 		29B97314FDCFA39411CA2CEA /* CustomTemplate */ = {
 			isa = PBXGroup;
 			children = (
@@ -545,7 +530,6 @@
 				1BE90BE61105FB3A00F6D2FE /* UnitTests */,
 				19C28FACFE9D520D11CA2CBB /* Products */,
 				1B8740EA112A213300589D2A /* Tools */,
-				1BF76A9A114C6640002D7887 /* Graphics */,
 			);
 			name = CustomTemplate;
 			sourceTree = "<group>";
@@ -779,7 +763,7 @@
 				);
 				PREBINDING = NO;
 				PRODUCT_NAME = UnitTests;
-				SDKROOT = iphoneos3.1.2;
+				SDKROOT = iphoneos4.0;
 			};
 			name = Debug;
 		};
@@ -808,7 +792,7 @@
 				);
 				PREBINDING = NO;
 				PRODUCT_NAME = UnitTests;
-				SDKROOT = iphoneos3.1.2;
+				SDKROOT = iphoneos4.0;
 				ZERO_LINK = NO;
 			};
 			name = Release;
@@ -823,10 +807,11 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = $SDKROOT/usr/include/libxml2;
+				IPHONEOS_DEPLOYMENT_TARGET = 3.1.3;
 				PREBINDING = NO;
 				PROVISIONING_PROFILE = "";
 				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
-				SDKROOT = iphoneos3.1.2;
+				SDKROOT = iphoneos4.0;
 			};
 			name = Distribution;
 		};
@@ -871,7 +856,7 @@
 				);
 				PREBINDING = NO;
 				PRODUCT_NAME = UnitTests;
-				SDKROOT = iphoneos3.1.2;
+				SDKROOT = iphoneos4.0;
 				ZERO_LINK = NO;
 			};
 			name = Distribution;
@@ -920,10 +905,11 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = $SDKROOT/usr/include/libxml2;
+				IPHONEOS_DEPLOYMENT_TARGET = 3.1.3;
 				PREBINDING = NO;
 				PROVISIONING_PROFILE = "";
 				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
-				SDKROOT = iphoneos3.1.2;
+				SDKROOT = iphoneos4.0;
 			};
 			name = Debug;
 		};
@@ -937,10 +923,11 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = $SDKROOT/usr/include/libxml2;
+				IPHONEOS_DEPLOYMENT_TARGET = 3.1.3;
 				PREBINDING = NO;
 				PROVISIONING_PROFILE = "";
 				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
-				SDKROOT = iphoneos3.1.2;
+				SDKROOT = iphoneos4.0;
 			};
 			name = Release;
 		};
