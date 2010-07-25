@@ -105,7 +105,6 @@
 		1B510A941180785000FF55B0 /* MKPlacePinAnnotationView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MKPlacePinAnnotationView.m; sourceTree = "<group>"; };
 		1B52C95010E5FB9D00B52EEA /* UnitTests.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = UnitTests.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1B52C95210E5FB9D00B52EEA /* UnitTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "UnitTests-Info.plist"; sourceTree = "<group>"; };
-		1B5584AF10E3001A00039022 /* ModelTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "ModelTests-Info.plist"; sourceTree = "<group>"; };
 		1B5E233E11931723005597B1 /* jQueryInject.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = jQueryInject.txt; sourceTree = "<group>"; };
 		1B5E233F11931723005597B1 /* jQueryInjectLandscape.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = jQueryInjectLandscape.txt; sourceTree = "<group>"; };
 		1B5E234211931723005597B1 /* ExchangeCredentialsOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ExchangeCredentialsOperation.h; sourceTree = "<group>"; };
@@ -560,7 +559,6 @@
 				1BF4B7F510E1EFF70032842A /* note32.png */,
 				1BF4B7F310E1EF410032842A /* gear32.png */,
 				8D1107310486CEB800E47090 /* TweetNow-Info.plist */,
-				1B5584AF10E3001A00039022 /* ModelTests-Info.plist */,
 				1B52C95210E5FB9D00B52EEA /* UnitTests-Info.plist */,
 			);
 			name = Resources;
