@@ -11,7 +11,8 @@
 
 @interface StationSearch : NSObject {
 }
++ (PlaceList *) nearLongitude:(float)longitude withLatitude:(float)latitude withDelta:(float)delta;
 + (PlaceList *) nearLongitude:(float)longitude withLatitude:(float)latitude;
-	
++ (void) setMaximumResultCount:(int)count;
 
 @end

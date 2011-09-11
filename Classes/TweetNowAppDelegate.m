@@ -16,6 +16,8 @@
 @synthesize window;
 @synthesize tabBarController;
 @synthesize navigationController;
+@synthesize placesViewController;
+@synthesize phraseViewController;
 
 
 
@@ -27,11 +29,11 @@
 	if (![Config sharedInstance].debug) {
 		NSArray *tabs = self.tabBarController.viewControllers;
 		self.tabBarController.viewControllers = [NSArray arrayWithObjects:[tabs objectAtIndex:0],
-												 [tabs objectAtIndex:1], [tabs objectAtIndex:3], nil];
+												 [tabs objectAtIndex:1], [tabs objectAtIndex:2],
+                                                 [tabs objectAtIndex:4], nil];
 	}	
     [window makeKeyAndVisible];
 }
-
 
 - (void)dealloc {
     [tabBarController release];

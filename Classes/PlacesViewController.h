@@ -8,16 +8,21 @@
 
 #import <UIKit/UIKit.h>
 #import "AddPlaceViewController.h"
+#import "GADBannerView.h"
 
 
 @interface PlacesViewController : UIViewController <UITableViewDelegate> {
 	UITableView *placesList;
 	AddPlaceViewController *addPlaceViewController;
+    GADBannerView *bannerView;
+  @private
+    UIImage  *listMark;
 }
 @property (nonatomic, retain) IBOutlet UITableView *placesList;
 @property (nonatomic, retain) IBOutlet AddPlaceViewController *addPlaceViewController;
 
 - (IBAction)onPushEdit:(id)sender;
+- (IBAction)onPushAdd:(id)sender;
 - (BOOL)toggleEditingMode;
 
 @end

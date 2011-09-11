@@ -49,7 +49,9 @@ NSInteger locationCompare(Place *p1, Place *p2, Location *refrence) {
 }
 
 - (void) addCopyOfPlace:(Place *)place {
-	[list addObject:[place copy]];
+    Place *copiedPlace = [place copy];
+	[list addObject:copiedPlace];
+    [copiedPlace release];
 }
 
 - (void) addPlaceList:(PlaceList *)placeList {
@@ -80,6 +82,10 @@ NSInteger locationCompare(Place *p1, Place *p2, Location *refrence) {
 	return [[list objectAtIndex:index] name];
 }
 
+- (int)kindAtIndex:(int)index {
+    return [[list objectAtIndex:index] kind];
+}
+
 - (Place *) placeAtIndex:(int)index {
 	return [list objectAtIndex:index];
 }
@@ -97,6 +103,12 @@ NSInteger locationCompare(Place *p1, Place *p2, Location *refrence) {
 	return  -1;
 }
 
+- (void) movePlaceAtIndex:(int)fromIndex toIndex:(int)toIndex {
+    Place *item = [[list objectAtIndex:fromIndex] retain];
+    [list removeObjectAtIndex:fromIndex];
+    [list insertObject:item atIndex:toIndex];
+    [item release];    
+}
 
 - (Location *) distanceOfPlaceListWithLongitude:(float)aLongitude latitude:(float)aLatitude {
 	static Location distance;
@@ -118,6 +130,11 @@ NSInteger locationCompare(Place *p1, Place *p2, Location *refrence) {
 	return &distance;
 }
 
+- (void) truncateCount:(int)newSize {
+    if ([list count] > newSize) {
+        [list removeObjectsInRange:NSMakeRange(newSize, [list count] - newSize)];
+    }
+}
 
 - (NSArray *) toStringArray {
 	NSMutableArray *stringArray = [NSMutableArray arrayWithCapacity:20];
@@ -127,10 +144,10 @@ NSInteger locationCompare(Place *p1, Place *p2, Location *refrence) {
 	return (NSArray *)stringArray;
 }
 
-- (void) fromStringArray:(NSArray *)array {
+- (void) fromStringArray:(NSArray *)array defaultKind:(int)kind {
 	[list removeAllObjects];
 	for (int i = 0; i < [array count]; i++) {
-		[self addPlace:[Place placeWithString:[array objectAtIndex:i]]];
+		[self addPlace:[Place placeWithString:[array objectAtIndex:i] defaultKind:kind]];
 	}
 }
 

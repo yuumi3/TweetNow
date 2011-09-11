@@ -12,12 +12,20 @@
 #define LOG_DB_KEY @"TN_LOG"
 
 void TNLog(NSString *format, ...) {
-	if (! [Config sharedInstance].debug) return; 
-	
 	va_list args;
-	
+
+	if (! [Config sharedInstance].debug) {
+#if TARGET_IPHONE_SIMULATOR
+        va_start(args, format);
+        NSLog(@"+ %@", [[[NSString alloc] initWithFormat:format arguments:args] autorelease]);
+        va_end(args);      
+#endif       
+        return;
+    }
+
 	va_start(args, format);
 	NSString *msg = [[[NSString alloc] initWithFormat:format arguments:args] autorelease];
+    NSLog(@"+ %@", msg);
 	
 	NSString *log_db = [[NSUserDefaults standardUserDefaults] stringForKey:LOG_DB_KEY];
 	if (log_db == nil) log_db = @"";

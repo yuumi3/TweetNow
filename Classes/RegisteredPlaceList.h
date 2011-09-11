@@ -17,6 +17,7 @@
 - (void) load;
 - (void) save;
 - (PlaceList *) nearLongitude:(float)longitude withLatitude:(float)latitude;
+- (PlaceList *) nearLongitude:(float)longitude withLatitude:(float)latitude withDelta:(float)delta;
 - (void) removeAll;		// method for Testing
 
 @end

@@ -12,7 +12,8 @@
 #import "TNLogger.h"
 
 // default database の格納キー
-#define DB_VERSION			102					// 102 で PASSWORD, GPSTIME が無くなった
+#define DB_VERSION			103					// 103 は 102 と同じだがKEYCHAINにXAuthAccessTokenを格納
+#define DB_VERSION_102		102					// 102 で PASSWORD, GPSTIME が無くなった
 #define DB_VERSION_101		101					// パスワードを保存していた 
 #define CONFIG_DB_VERSION	@"configDbVersion"
 #define CONFIG_LOGIN		@"configLogin"
@@ -36,6 +37,7 @@ static Config *sharedInstanceDelegate = nil;
 @synthesize postfix;
 @synthesize debug;
 @synthesize logUpUrl;
+@synthesize xAuthToken;
 
 
 //
@@ -50,6 +52,7 @@ static Config *sharedInstanceDelegate = nil;
 		self.prefix   = @"";
 		self.postfix  = @" なう";
 		self.logUpUrl = @"";
+        self.xAuthToken = @"";
 		self.debug    = NO;
 	} else {
 		self.login     = [[NSUserDefaults standardUserDefaults] stringForKey:CONFIG_LOGIN];
@@ -61,7 +64,8 @@ static Config *sharedInstanceDelegate = nil;
 		if (dbVersion == DB_VERSION_101) {
 			TNLog(@"++ DB version up %d -> %d", dbVersion, DB_VERSION);
 			NSString *savedPassword = [[NSUserDefaults standardUserDefaults] stringForKey:CONFIG_PASSWORD];
-			[SFHFKeychainUtils storeUsername:login andPassword:savedPassword forServiceName:SERVICE_NAME_FOR_KEYCHAIN updateExisting:YES error:&error];
+			[SFHFKeychainUtils storeUsername:login andPassword:savedPassword forServiceName:SERVICE_NAME_FOR_KEYCHAIN_LOGIN updateExisting:YES
+                                       error:&error];
 			if (error) {
 				TNLog(@"SFHFKeychainUtils store fail: %@", error);
 				[SimpleAlertView alertWithTitle:@"パスワードエラー" message:@"Twitterパスワードをキーチェインに移行するのに失敗しました"];
@@ -70,22 +74,32 @@ static Config *sharedInstanceDelegate = nil;
 			[[NSUserDefaults standardUserDefaults] removeObjectForKey:CONFIG_GPSTIME];
 			[[NSUserDefaults standardUserDefaults] setInteger:DB_VERSION forKey:CONFIG_DB_VERSION];
 		}
-		self.password = [SFHFKeychainUtils getPasswordForUsername:login andServiceName:SERVICE_NAME_FOR_KEYCHAIN error:&error];
+		self.password = [SFHFKeychainUtils getPasswordForUsername:login andServiceName:SERVICE_NAME_FOR_KEYCHAIN_LOGIN error:&error];
 		if (!self.password) {
 			TNLog(@"SFHFKeychainUtils store fail: %@", error);
 			[SimpleAlertView alertWithTitle:@"パスワードエラー" message:@"Twitterのパスワードを設定して下さい"];
 			self.password = @"" ;
 		}
+        self.xAuthToken = [SFHFKeychainUtils getPasswordForUsername:login andServiceName:SERVICE_NAME_FOR_KEYCHAIN_XAUTH error:&error];
+        if (!self.password) {
+            self.xAuthToken = @"";
+        }
 	}
 }
 
 //
 - (void)save {
 	NSError  *error = nil;
-	[SFHFKeychainUtils storeUsername:login andPassword:password forServiceName:SERVICE_NAME_FOR_KEYCHAIN updateExisting:YES error:&error];
+	[SFHFKeychainUtils storeUsername:login andPassword:password forServiceName:SERVICE_NAME_FOR_KEYCHAIN_LOGIN updateExisting:YES error:&error];
 	if (error) {
 		TNLog(@"SFHFKeychainUtils store fail: %@", error);
-		[SimpleAlertView alertWithTitle:@"パスワード移行失敗" message:@"パスワードをキーチェインに移行するのに失敗しました"];
+		[SimpleAlertView alertWithTitle:@"パスワード保存失敗" message:@"パスワードをキーチェインに保存するのに失敗しました"];
+	}
+    error = nil;
+	[SFHFKeychainUtils storeUsername:login andPassword:xAuthToken forServiceName:SERVICE_NAME_FOR_KEYCHAIN_XAUTH updateExisting:YES error:&error];
+	if (error) {
+		TNLog(@"SFHFKeychainUtils store fail: %@", error);
+		[SimpleAlertView alertWithTitle:@"パスワード保存失敗" message:@"パスワードをキーチェインに保存するのに失敗しました"];
 	}
 	[[NSUserDefaults standardUserDefaults] setInteger:dbVersion forKey:CONFIG_DB_VERSION];
 	[[NSUserDefaults standardUserDefaults] setObject:login      forKey:CONFIG_LOGIN]; 
@@ -132,7 +146,7 @@ static Config *sharedInstanceDelegate = nil;
 	return UINT_MAX;  // denotes an object that cannot be released
 }
 
-- (void)release {
+- (oneway void)release {
 	//do nothing
 }
 

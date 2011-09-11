@@ -6,6 +6,7 @@
 //  Copyright 2009 EY-Office. All rights reserved.
 //
 
+#import <QuartzCore/QuartzCore.h>
 #import "AddPlaceViewController.h"
 #import "TNLogger.h"
 #import "RegisteredPlaceList.h"
@@ -28,6 +29,7 @@
 @synthesize saveButton;
 @synthesize newPlace;
 @synthesize mapLocked;
+@synthesize textFrame;
 
 
 #pragma mark View and memory management methods.
@@ -35,7 +37,10 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     [mapView.userLocation addObserver:self forKeyPath:@"location" options:0 context:NULL];  
-	self.newPlace = [Place placeWithLongitude:0 latitude:0 name:@""];
+	self.newPlace = [Place placeWithLongitude:0 latitude:0 name:@"" kind:PLACE_USER_REGISTERED];
+    CALayer *layer = [textFrame layer];
+    layer.shadowOpacity = 0.6;
+    layer.shadowOffset = CGSizeMake(0, 3);        
 }
 
 - (void)viewDidUnload {
@@ -43,14 +48,15 @@
 	self.nameTextField = nil;
 	self.saveButton = nil;
 	self.newPlace = nil;
+    self.textFrame = nil;
 }
 
 - (void)viewWillAppear:(BOOL)animated {
 	mapView.showsUserLocation = NO;
 	[mapView removeAnnotations:mapView.annotations];
 	mapView.showsUserLocation = YES;
+    saveButton.enabled = NO;
 	[self lockMapView:NO];
-	saveButton.enabled = NO;
 	
 	[UIApplication sharedApplication].networkActivityIndicatorVisible = YES;
 	[super viewWillAppear:animated];
@@ -72,6 +78,7 @@
 	[nameTextField release];
 	[saveButton release];
 	[newPlace release];
+    [textFrame release];
     [super dealloc];
 }
 
@@ -79,10 +86,6 @@
 #pragma mark Event handle methods.
 
 - (IBAction)onPushDone:(id)sender {
-	if ([nameTextField.text isEqualToString:@""]) {
-		[SimpleAlertView alertWithTitle:@"" message:@"場所名を入力して下さい"];
-		return;
-	}
 	RegisteredPlaceList *placeList = [RegisteredPlaceList sharedInstance];
 	newPlace.name = nameTextField.text;
 	[placeList addCopyOfPlace:newPlace];
@@ -92,8 +95,6 @@
 }
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {  
-	saveButton.enabled = YES;
-
 	if (mapLocked) return;
 
 	float longitude = mapView.userLocation.location.coordinate.longitude;
@@ -123,6 +124,11 @@
 - (BOOL)textFieldShouldReturn:(UITextField *)textField {
 	[textField resignFirstResponder];
 	return YES;
+}
+
+- (BOOL)textField:(UITextField *)textField shouldChangeCharactersInRange:(NSRange)range replacementString:(NSString *)string {
+	saveButton.enabled = ([textField.text length] + [string length] - range.length) > 0;
+    return YES;
 }
 
 #pragma mark -

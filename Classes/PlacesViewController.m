@@ -8,26 +8,55 @@
 
 #import "PlacesViewController.h"
 #import "RegisteredPlaceList.h"
+#import "AdBanner.h"
 
+
+#define LIST_MARK_IMAGE [UIImage imageNamed:@"pin.png"]
+
+@interface PlacesViewController ()
+@property(nonatomic, retain) UIImage  *listMark;
+@end
 
 @implementation PlacesViewController
 
 @synthesize placesList;
 @synthesize addPlaceViewController;
-
+@synthesize listMark;
 
 #pragma mark View and memory management methods.
 
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    self.listMark = LIST_MARK_IMAGE;
+
+    bannerView = [[GADBannerView alloc]
+                   initWithFrame:CGRectMake(0.0,
+                                            ADMOB_BANNER_TOP_Y, // self.view.frame.size.height - GAD_SIZE_320x50.height,
+                                            GAD_SIZE_320x50.width,
+                                            GAD_SIZE_320x50.height)];
+    
+    bannerView.adUnitID = ADMOB_BANNER_UNIT_ID;
+    bannerView.rootViewController = self;
+    [self.view addSubview:bannerView];
+    [bannerView loadRequest:[GADRequest request]];
+}
 
 - (void)viewDidUnload {
 	self.placesList = nil;
 	self.addPlaceViewController = nil;
+    self.listMark = nil;
 }
 
 - (void)viewWillAppear:(BOOL)animated {
 	[placesList reloadData];
     [super viewWillAppear:animated];
 }
+
+- (void)viewDidAppear:(BOOL)animated {
+    [super viewDidAppear:animated];
+    [bannerView loadRequest:[GADRequest request]];
+}
+
 
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
@@ -36,6 +65,8 @@
 - (void)dealloc {
 	[placesList release];
 	[addPlaceViewController release];
+    [listMark release];
+    [bannerView release];
     [super dealloc];
 }
 
@@ -43,29 +74,35 @@
 
 - (BOOL)toggleEditingMode {
 	if (placesList.editing) {
+        self.listMark = LIST_MARK_IMAGE;
 		[placesList setEditing:NO animated:YES];
 		[placesList reloadData];
 		return NO;
 	} else {
+        self.listMark = nil;
 		[placesList setEditing:YES animated:YES];
 		[placesList reloadData];
 		return YES;
 	}
 }
 
-- (IBAction)onPushEdit:(id)sender {
+- (IBAction)onPushEdit:(id)sender {    
 	if ([self toggleEditingMode]) {
-		self.navigationItem.rightBarButtonItem.title = @"終了";
+        self.navigationItem.rightBarButtonItem = [[[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone target:self action:@selector(onPushEdit:)] autorelease];
 	} else {
-		self.navigationItem.rightBarButtonItem.title = @"編集";
+        self.navigationItem.rightBarButtonItem = [[[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemEdit target:self action:@selector(onPushEdit:)] autorelease];
 	}
-}
+ }
 
+- (IBAction)onPushAdd:(id)sender {
+    addPlaceViewController.hidesBottomBarWhenPushed = YES; 
+    [self.navigationController pushViewController:addPlaceViewController animated: YES];
+}
 
 #pragma mark Table view methods
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    return [[RegisteredPlaceList sharedInstance] count] + (placesList.editing ? 0 : 1);
+    return [[RegisteredPlaceList sharedInstance] count];
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
@@ -77,28 +114,17 @@
 		cell.accessoryType = UITableViewCellAccessoryNone;
     }
     
-	if (indexPath.row >= [[RegisteredPlaceList sharedInstance] count]) {
-		cell.textLabel.text = @"新規登録";
-		cell.textLabel.textColor = [UIColor lightGrayColor];
-		cell.textLabel.textAlignment = UITextAlignmentCenter;
-	} else {
-		cell.textLabel.text = [[RegisteredPlaceList sharedInstance] nameAtIndex:indexPath.row];
-		cell.textLabel.textColor = [UIColor blackColor];
-		cell.textLabel.textAlignment = UITextAlignmentLeft;
-	}
+    cell.textLabel.text = [[RegisteredPlaceList sharedInstance] nameAtIndex:indexPath.row];
+    cell.textLabel.textColor = [UIColor blackColor];
+    cell.textLabel.textAlignment = UITextAlignmentLeft;
+    cell.imageView.image = listMark;
 	
     return cell;
 }
 
-- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
-{
-	if (indexPath.row < [[RegisteredPlaceList sharedInstance] count]) {
-		[[UIPasteboard generalPasteboard] setString:[[RegisteredPlaceList sharedInstance] nameAtIndex:indexPath.row]]; 
-		[tableView deselectRowAtIndexPath:indexPath animated:YES];
-	} else {
-		addPlaceViewController.hidesBottomBarWhenPushed = YES; 
-		[self.navigationController pushViewController:addPlaceViewController animated: YES];
-	}
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+    [[UIPasteboard generalPasteboard] setString:[[RegisteredPlaceList sharedInstance] nameAtIndex:indexPath.row]]; 
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
 }
 
 - (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath {
@@ -108,6 +134,20 @@
 		[places save];
 		[placesList reloadData];	
 	}
+}
+
+- (BOOL)tableView:(UITableView *)tableView canMoveRowAtIndexPath:(NSIndexPath *)indexPath {
+    return YES;
+}
+
+- (void)tableView:(UITableView *)tableView moveRowAtIndexPath:(NSIndexPath *)fromIndexPath toIndexPath:(NSIndexPath *)toIndexPath {
+    
+	RegisteredPlaceList *places = [RegisteredPlaceList sharedInstance];
+	if (fromIndexPath.row < [places count]) {
+        [places movePlaceAtIndex:fromIndexPath.row toIndex:toIndexPath.row];
+		[places save];
+		[placesList reloadData];	
+    }
 }
 
 

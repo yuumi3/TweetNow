@@ -91,6 +91,7 @@
 	config.password = password.text;
 	config.prefix = prefix.text;
 	config.postfix = postfix.text;
+    config.xAuthToken = @"";    // clear cached AuthToken
 	if (config.debug) {
 		config.logUpUrl = logUpUrl.text;
 	}

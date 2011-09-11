@@ -10,6 +10,7 @@
 #import "TweetNowViewController.h"
 #import "Config.h"
 #import "RegisteredPlaceList.h"
+#import "PhraseList.h"
 #import "TNLogger.h"
 #import "MKPlacePinAnnotationView.h"
 
@@ -22,56 +23,78 @@
 @property (nonatomic, retain) PlaceList	*placeList;
 @property (nonatomic, retain) Place     *lastPoint;
 @property (nonatomic)         BOOL		mapLocked;
-@property (nonatomic, retain) XAuthTwitterStatusPost *twetterPost;
+@property (nonatomic)         BOOL		popupKeyborad;
+@property (nonatomic, retain) TwitterStatusPost *twetterPost;
 
 - (void) startGPS;
 - (void) showSplash;
 - (void) hideSplash;
 - (void) tweetMessage:(NSString *)placeName;
 - (void) selectPlace:(id)argument;
+- (void) phrasePaletteAnimation:(BOOL)show;
+- (void)registerForKeyboardNotifications;
 
 @end
 
 #pragma mark -
 @implementation TweetNowViewController
 
-@synthesize mapView;
+@synthesize placeMapView;
 @synthesize postText;
 @synthesize splash;
 @synthesize postButton;
 @synthesize placeList;
 @synthesize lastPoint;
 @synthesize mapLocked;
+@synthesize popupKeyborad;
 @synthesize twetterPost;
 @synthesize bussyMaskView;
+@synthesize phraseTable;
+@synthesize textFrame;
 
 #pragma mark View and memory management methods.
 
+
 - (void)viewDidLoad {
+	[self registerForKeyboardNotifications];
     [super viewDidLoad];
 	
-	self.twetterPost = [[XAuthTwitterStatusPost alloc] init];
+	self.twetterPost = [[TwitterStatusPost alloc] init];
 	self.twetterPost.delegate = self;
-    [mapView.userLocation addObserver:self forKeyPath:@"location" options:0 context:NULL];  
+    self.bussyMaskView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 320, 368)];
+    bussyMaskView.backgroundColor = [UIColor grayColor];
+    bussyMaskView.alpha = 0.6;
+    bussyMaskView.hidden = YES;
+    [self.view addSubview:bussyMaskView];
+
+    [placeMapView.userLocation addObserver:self forKeyPath:@"location" options:0 context:NULL];  
 }
 
 - (void)viewDidUnload {
-	self.mapView = nil;
+	self.placeMapView = nil;
 	self.postText = nil;
 	self.postButton = nil;
 	self.splash = nil;
 	self.twetterPost = nil;
+    self.bussyMaskView = nil;
+    self.textFrame = nil;
 }
 
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
+    phraseTable.hidden = YES;
+    popupKeyborad = NO;
+    [phraseTable reloadData];
 	[self showSplash];
 	[self startGPS];
 }
 
 - (void)viewWillDisappear:(BOOL)animated {
-	[UIApplication sharedApplication].networkActivityIndicatorVisible = NO;;
-	mapView.showsUserLocation = NO;
+    if ([postText.text length] > 0) {
+        [UIPasteboard generalPasteboard].string = postText.text;
+    }
+	[UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
+	placeMapView.showsUserLocation = NO;
 }
 
 - (void)didReceiveMemoryWarning {
@@ -79,11 +102,13 @@
 }
 
 - (void)dealloc {
-	[mapView release];
+	[placeMapView release];
 	[postText release];
 	[splash  release];
 	[postButton release];
 	[twetterPost release];
+    [bussyMaskView release];
+    [textFrame release];
     [super dealloc];
 }
 
@@ -97,17 +122,20 @@
 }
 
 - (IBAction)onPushPost:(id)sender {
-	postButton.enabled = NO; 
-	bussyMaskView.hidden = NO;
-	self.mapLocked = YES;
+    if ([postText.text length] > 0) {
+        postButton.enabled = NO; 
+        bussyMaskView.hidden = NO;
+        self.mapLocked = YES;
+        
+        Config *config = [Config sharedInstance];
+        [twetterPost setUserName:config.login password:config.password];
+        twetterPost.didSuccessSelector =  @selector(postDidAction);
+        twetterPost.didFailedSelector  =  @selector(postDidAction);
+        [twetterPost postMessage:postText.text timeoutInterval:TWITTER_POST_TIMEOUT];
+        
+        [UIApplication sharedApplication].networkActivityIndicatorVisible = YES;        
+    }
 
-	Config *config = [Config sharedInstance];
-	[twetterPost setUserName:config.login password:config.password];
-	twetterPost.didSuccessSelector =  @selector(postDidAction);
-	twetterPost.didFailedSelector  =  @selector(postDidAction);
-	[twetterPost postMessage:postText.text timeoutInterval:TWITTER_POST_TIMEOUT];
-
-	[UIApplication sharedApplication].networkActivityIndicatorVisible = YES;;
 	[postText resignFirstResponder];
 }
 
@@ -123,8 +151,8 @@
 	}	
 	[UIApplication sharedApplication].networkActivityIndicatorVisible = NO;;
 
-	float longitude = mapView.userLocation.location.coordinate.longitude;
-	float latitude = mapView.userLocation.location.coordinate.latitude;
+	float longitude = placeMapView.userLocation.location.coordinate.longitude;
+	float latitude = placeMapView.userLocation.location.coordinate.latitude;
 #if TARGET_IPHONE_SIMULATOR
 	longitude = 139.670245;
 	latitude = 35.612152;
@@ -133,38 +161,41 @@
 	TNLog(@"-- delta %e", lastPoint ? [lastPoint squareDistanceFromLongitude:longitude latitude:latitude] : -1.0);
 	if (lastPoint && 
 		[lastPoint squareDistanceFromLongitude:longitude latitude:latitude] < DELTA)  return;
-	
-	self.lastPoint = [Place placeWithLongitude:longitude latitude:latitude name:nil];
-	self.placeList = [[RegisteredPlaceList sharedInstance] nearLongitude:longitude withLatitude:latitude];
-	[placeList addPlaceList:[StationSearch nearLongitude:longitude withLatitude:latitude]];
-	[placeList sortByDistanceFromLongitude:longitude latitude:latitude];
-	
-	[mapView removeAnnotations:mapView.annotations];
-	for (int i = 0; i < [placeList count]; i++) {
-		[mapView addAnnotation:[placeList placeAtIndex:i]];
-	}
-	
+	self.lastPoint = [Place placeWithLongitude:longitude latitude:latitude name:nil kind:0];
+
 	MKCoordinateRegion region;
 	region.center.latitude = latitude;
 	region.center.longitude = longitude;
-	Location *distance = [placeList distanceOfPlaceListWithLongitude:longitude latitude:latitude];
-	region.span.latitudeDelta  = distance->latitude * 1.1 + 0.001;
-	region.span.longitudeDelta = distance->longitude * 1.1 + 0.001;
-	mapView.centerCoordinate = mapView.userLocation.location.coordinate;
-	
-	postButton.enabled = YES;
-	[mapView setRegion:region animated:NO];
-	
-	if ([placeList count] > 0) {
-		TNLog(@"nearest %@ (%@)", [placeList nameAtIndex:0], mapView.userLocation.location.description);
-		[self tweetMessage:[placeList nameAtIndex:0]];
-		[mapView selectAnnotation:[placeList placeAtIndex:0] animated:YES];
-	} else {
-		TNLog(@"No nearest (%@)", mapView.userLocation.location.description);
-		[self tweetMessage:@"所在知れず"];	
-	}		
+	region.span.latitudeDelta  = 0.02;
+	region.span.longitudeDelta = 0.02;
+
+	placeMapView.centerCoordinate = placeMapView.userLocation.location.coordinate;	
+	[placeMapView setRegion:region animated:NO];
 }  
 
+- (void)mapView:(MKMapView *)mapView regionDidChangeAnimated:(BOOL)animated {
+	float longitude = mapView.region.center.longitude;
+	float latitude = mapView.region.center.latitude;
+    
+	self.placeList = [[RegisteredPlaceList sharedInstance] nearLongitude:longitude withLatitude:latitude withDelta:mapView.region.span.latitudeDelta / 2.0];
+	[placeList addPlaceList:[StationSearch nearLongitude:longitude withLatitude:latitude withDelta:mapView.region.span.latitudeDelta / 2.0]];
+	[placeList sortByDistanceFromLongitude:longitude latitude:latitude];
+
+	[placeMapView removeAnnotations:placeMapView.annotations];
+	for (int i = 0; i < [placeList count]; i++) {
+		[placeMapView addAnnotation:[placeList placeAtIndex:i]];
+	}
+	
+	if ([placeList count] > 0) {
+		TNLog(@"nearest %@ (%@)", [placeList nameAtIndex:0], placeMapView.userLocation.location.description);
+		[self tweetMessage:[placeList nameAtIndex:0]];
+		[placeMapView selectAnnotation:[placeList placeAtIndex:0] animated:YES];
+	} else {
+		TNLog(@"No nearest (%@)", placeMapView.userLocation.location.description);
+		[self tweetMessage:@"所在知れず"];	
+	}
+	postButton.enabled = YES;
+}
 
 - (MKAnnotationView *)mapView:(MKMapView *)theMapView viewForAnnotation:(id <MKAnnotation>)annotation {
 	static NSString *AnnotationIdentifier = @"PlaceAnnotations";
@@ -173,7 +204,8 @@
 		int pinNo = [placeList indexOfName:[annotation title]];
 		MKPlacePinAnnotationView *placePinView = [[[MKPlacePinAnnotationView alloc]
 												   initWithAnnotation:annotation reuseIdentifier:AnnotationIdentifier] autorelease];
-		placePinView.pinColor = MKPinAnnotationColorRed;
+        Place *p = (Place *)annotation;
+		placePinView.pinColor = p.kind == PLACE_STATION ? MKPinAnnotationColorRed : MKPinAnnotationColorGreen;
 		placePinView.animatesDrop = YES;
 		placePinView.canShowCallout = YES;
 		placePinView.tag = pinNo;
@@ -183,25 +215,56 @@
     return nil;
 }
 
+
 - (IBAction)startEditTextField:(id)sender {
 	self.mapLocked = YES;
+    phraseTable.hidden = YES;
 }
 
+
 - (BOOL)textFieldShouldReturn:(UITextField *)textField {
-	[textField resignFirstResponder];
+    [textField resignFirstResponder];
 	return YES;
 }
 
+#pragma mark -
+#pragma mark Table view methods
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
+    PhraseList *phrases = [PhraseList sharedInstance];
+    return [phrases count];
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    NSString *CellIdentifier = @"PhreaseList";
+    
+    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+    if (cell == nil) {
+        cell = [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier] autorelease];
+		cell.accessoryType = UITableViewCellAccessoryNone;
+    }
+    
+    PhraseList *phrases = [PhraseList sharedInstance];
+    cell.textLabel.text = [[phrases list] objectAtIndex:indexPath.row];
+
+    return cell;
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+    PhraseList *phrases = [PhraseList sharedInstance];
+    postText.text = [postText.text stringByAppendingFormat:@" %@", [[phrases list] objectAtIndex:indexPath.row]];
+    [tableView deselectRowAtIndexPath:indexPath animated:NO];
+}
 
 
 #pragma mark -
 #pragma mark Private methods
 
 - (void) startGPS {
-	mapView.showsUserLocation = NO;
+	placeMapView.showsUserLocation = NO;
 	self.mapLocked = NO;
 	postButton.enabled = NO;
-	mapView.showsUserLocation = YES;
+	placeMapView.showsUserLocation = YES;
 	
 	self.lastPoint = nil; 
 	[UIApplication sharedApplication].networkActivityIndicatorVisible = YES;;
@@ -245,9 +308,48 @@
 	int index = [(NSNumber *)argument intValue];
 	if (index >= 0) {
 		[self tweetMessage:[placeList nameAtIndex:index]];
-		[mapView deselectAnnotation:[placeList placeAtIndex:index] animated:YES];
+		[placeMapView deselectAnnotation:[placeList placeAtIndex:index] animated:YES];
 	}
 }
+
+- (void)phrasePaletteAnimation:(BOOL)show {
+    CATransition *animation = [CATransition animation];
+    animation.delegate = self;
+    
+    CALayer *layer = [textFrame layer];
+    if (show) {
+        layer.shadowOpacity = 0.6;
+        layer.shadowOffset = CGSizeMake(0, 3); 
+        animation.duration = 0.2;
+    } else {
+        layer.shadowOpacity = 0.0;
+        animation.duration = 0.1;
+    }
+
+	animation.type = kCATransitionFade;
+    phraseTable.hidden = !show;
+	[[phraseTable layer] addAnimation:animation forKey:@"splashFadeAnimation"];
+}
+
+
+- (void)keyboardWillShow:(NSNotification*)aNotification {
+    [self phrasePaletteAnimation:YES];
+}
+
+- (void)keyboardWillHide:(NSNotification*)aNotification {
+    [self phrasePaletteAnimation:NO];
+}
+
+// http://www.ifans.com/forums/showthread.php?t=222944
+- (void)registerForKeyboardNotifications {
+	[[NSNotificationCenter defaultCenter] addObserver:self
+											 selector:@selector(keyboardWillShow:)
+												 name:UIKeyboardWillShowNotification object:nil];
+	[[NSNotificationCenter defaultCenter] addObserver:self
+											 selector:@selector(keyboardWillHide:)
+												 name:UIKeyboardWillHideNotification object:nil];
+}
+
 
 
 @end

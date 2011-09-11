@@ -32,13 +32,15 @@ typedef struct {
 - (float)longitudeAtIndex:(int)index;
 - (float)latitudeAtIndex:(int)index;
 - (NSString *)nameAtIndex:(int)index;
+- (int)kindAtIndex:(int)index;
 - (Place *) placeAtIndex:(int)index;
 - (void)removeAtIndex:(int)index;
 - (int) indexOfName:(NSString *)aName;
 - (Location *) distanceOfPlaceListWithLongitude:(float)aLongitude latitude:(float)aLatitude;
-
+- (void) movePlaceAtIndex:(int)fromIndex toIndex:(int)toIndex;
+- (void) truncateCount:(int)newSize;
 
 - (NSArray *) toStringArray;
-- (void) fromStringArray:(NSArray *)array;
+- (void) fromStringArray:(NSArray *)array defaultKind:(int)kind;
 
 @end

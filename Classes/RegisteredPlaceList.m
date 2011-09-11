@@ -7,7 +7,8 @@
 //
 
 #import "RegisteredPlaceList.h"
-#define DB_VERSION 101
+#define DB_VERSION          102     // 場所の種類(kind)を保存
+#define DB_VERSION_101		101
 #define PLACE_LIST_DB_VERSION @"placeListDbVersion"
 #define PLACE_LIST_DB  @"placeListDb"
 
@@ -29,8 +30,8 @@ static RegisteredPlaceList *sharedInstanceDelegate = nil;
 
 - (void)load {	
 	int dbVersion = [[NSUserDefaults standardUserDefaults] integerForKey:PLACE_LIST_DB_VERSION];
-	if (dbVersion == DB_VERSION) {
-		[self fromStringArray:[[NSUserDefaults standardUserDefaults] arrayForKey:PLACE_LIST_DB]];
+	if (dbVersion == DB_VERSION || dbVersion == DB_VERSION_101) {
+		[self fromStringArray:[[NSUserDefaults standardUserDefaults] arrayForKey:PLACE_LIST_DB] defaultKind:PLACE_USER_REGISTERED];
 	}
 	
 	//NSLog(@"load placeDb: %@", list);
@@ -42,18 +43,23 @@ static RegisteredPlaceList *sharedInstanceDelegate = nil;
 	//NSLog(@"save placeDb: %@", list);
 }
 
-- (PlaceList *) nearLongitude:(float)longitude withLatitude:(float)latitude {
+- (PlaceList *) nearLongitude:(float)longitude withLatitude:(float)latitude withDelta:(float)delta {
 	PlaceList *nears = [PlaceList placeList];
 
 	for (int i = 0; i < [list count]; i++) {
 		Place *p = (Place *)[list objectAtIndex:i];
-		if (fabsf(p.longitude - longitude) < 0.01 && fabsf(p.latitude - latitude) < 0.01) {
+		if (fabsf(p.longitude - longitude) < delta && fabsf(p.latitude - latitude) < delta) {
 			[nears addPlace:p];
 		}
 	}
 	
 	[nears sortByDistanceFromLongitude:longitude latitude:latitude];
 	return nears;
+}
+
+
+- (PlaceList *) nearLongitude:(float)longitude withLatitude:(float)latitude {
+    return [self nearLongitude:longitude withLatitude:latitude withDelta:0.01];
 }
 
 - (void) removeAll {
@@ -96,7 +102,7 @@ static RegisteredPlaceList *sharedInstanceDelegate = nil;
 	return UINT_MAX;  // denotes an object that cannot be released
 }
 
-- (void)release {
+- (oneway void)release {
 	//do nothing
 }
 

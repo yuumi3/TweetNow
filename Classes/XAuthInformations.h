@@ -7,5 +7,5 @@
 //
 
 
-#define kOAuthConsumerKey		@"hPbfXwmy4h5vDEeITmwZcQ"
-#define	kOAuthConsumerSecret	@"QWvINSs0HXxxO5abgujuBAtzUJufFVNeylbsDbWQc8" 
+#define kOAuthConsumerKey		@""
+#define	kOAuthConsumerSecret	@"" 

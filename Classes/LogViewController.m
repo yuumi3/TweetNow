@@ -16,6 +16,7 @@
 @implementation LogViewController
 @synthesize textView;
 @synthesize uploadButton;
+@synthesize clearConfirmAlertView;
 
 
 #pragma mark View and memory management methods.
@@ -23,6 +24,7 @@
 - (void)viewDidUnload {
 	self.textView = nil;
 	self.uploadButton = nil;
+    self.clearConfirmAlertView = nil;
 }
 
 - (void)viewWillAppear:(BOOL)animated {
@@ -40,6 +42,7 @@
 - (void)dealloc {
 	[textView release];
 	[uploadButton release];
+    [clearConfirmAlertView release];
     [super dealloc];
 }
 
@@ -47,7 +50,7 @@
 #pragma mark Event handle methods.
 
 - (IBAction)onPushClearLog:(id)sender {
-	UIAlertView *clearConfirmAlertView = [[UIAlertView alloc] initWithTitle:@"Are you sure?" message:@""
+	clearConfirmAlertView = [[UIAlertView alloc] initWithTitle:@"Are you sure?" message:@""
 																   delegate:self cancelButtonTitle:@"No"
 																   otherButtonTitles:@"Yes", nil];
 	[clearConfirmAlertView show];
@@ -58,7 +61,7 @@
 		[TNLogger deleteLogFile];
 		textView.text = [TNLogger readLogFile];
 	}
-	[alertView release];
+	[clearConfirmAlertView release];
 }
 
 - (IBAction)onPushUploadLog:(id)sender {
@@ -72,7 +75,7 @@
 	[request setHTTPBody:[[NSString stringWithFormat:@"%@=%@", @"log",
 						   [[TNLogger readLogFile] stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]]
 						  dataUsingEncoding:NSASCIIStringEncoding]];
-	NSURLConnection *conn = [[NSURLConnection alloc] initWithRequest:request delegate:self];
+	NSURLConnection *conn = [[[NSURLConnection alloc] initWithRequest:request delegate:self] autorelease];
 	if (conn == nil) {
 		TNLog(@"NSURLConnection error");
 		[SimpleAlertView alertWithTitle:@"通信エラー" message:@"サーバー接続失敗"];

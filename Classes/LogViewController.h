@@ -12,9 +12,11 @@
 @interface LogViewController : UIViewController {
 	UITextView	*textView;
 	UIButton	*uploadButton;
+    UIAlertView *clearConfirmAlertView;
 }
 @property (nonatomic, retain) IBOutlet UITextView	*textView;
 @property (nonatomic, retain) IBOutlet UIButton		*uploadButton;
+@property (nonatomic, retain) IBOutlet UIAlertView  *clearConfirmAlertView;
 
 - (IBAction)onPushClearLog:(id)sender;
 - (IBAction)onPushUploadLog:(id)sender;

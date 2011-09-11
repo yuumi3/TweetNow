@@ -14,6 +14,7 @@
     MKMapView		*mapView;  
 	UITextField		*nameTextField;
 	UIBarButtonItem	*saveButton;
+    UIView          *textFrame;
   @private
 	Place		*newPlace;
 	BOOL		mapLocked;
@@ -21,6 +22,7 @@
 @property (nonatomic, retain) IBOutlet MKMapView		*mapView;  
 @property (nonatomic, retain) IBOutlet UITextField		*nameTextField;
 @property (nonatomic, retain) IBOutlet UIBarButtonItem	*saveButton;
+@property (nonatomic, retain) IBOutlet UIView           *textFrame;
 
 - (IBAction)onPushDone:(id)sender;
 - (IBAction)startEditTextField:(id)sender;
